@@ -6,8 +6,7 @@ using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 using UnityEngine;
 using UnityEditor;
-using Fabric;
-using Fabric.SerializationHelper;
+using Fabric.Shared;
 
 public class TerrainGenerator : MonoBehaviour
 {
@@ -31,7 +30,7 @@ public class TerrainGenerator : MonoBehaviour
 
     protected MeshFilter meshFilter;
 
-    protected Fabric.TerrainData terrainData;
+    protected Fabric.Shared.TerrainData terrainData;
     // protected TerrainVertex[] terrainVertices;
     // protected TerrainTriangle[] terrainTriangles;
     protected float[] terrainTriangleAreasAggregated;
@@ -264,7 +263,7 @@ public class TerrainGenerator : MonoBehaviour
         {
             Mesh mesh = meshFilter.sharedMesh;
 
-            terrainData = Fabric.TerrainData.FromMesh(mesh);
+            terrainData = Fabric.Shared.TerrainData.FromMesh(mesh);
 
             terrainVertexOctree = new PointOctree<TerrainVertex>(2.0f, Vector3.zero, 0.00001f);
 
@@ -392,14 +391,14 @@ public class TerrainGenerator : MonoBehaviour
     private void SaveWorldToFile()
     {
         string fileName = Application.persistentDataPath + "/" + worldDirectoryName + "/" + noiseSeed.ToString() + ".ftr";
-        FileHelper.SaveToFile(fileName);
+        Fabric.Shared.FileHelper.SaveToFile(terrainData, fileName);
         Debug.Log("World saved to: " + fileName);
     }
 
     private void LoadWorldFromFile()
     {
         string fileName = Application.persistentDataPath + "/" + worldDirectoryName + "/" + noiseSeed.ToString() + ".ftr";
-        FileHelper.LoadFromFile(fileName);
+        terrainData = (Fabric.Shared.TerrainData)Fabric.Shared.FileHelper.LoadFromFile(fileName);
         UpdateMesh();        
         Debug.Log("World loaded from: " + fileName);
     }
