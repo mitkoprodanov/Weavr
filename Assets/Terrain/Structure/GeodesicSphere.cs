@@ -247,7 +247,10 @@ public class GeodesicSphere : MonoBehaviour
         originalMesh.triangles = triangles;
         originalMesh.normals = originalMesh.vertices;
 
-        meshFilter.mesh = originalMesh;
+        if (meshFilter != null)
+        {
+            meshFilter.mesh = originalMesh;
+        }
 
         // Debug.Log("VertexCount: " + mesh.vertices.Count() + " TriangleCount: " + (mesh.triangles.Count() / 3));    
         // Debug.Log("UpdateMesh End");

@@ -1,7 +1,7 @@
 {
   "dependencies": {
     "com.fabric.shared": {
-      "version": "file:C:/Projects/Stitch/Packages/FabricSharedPackage",
+      "version": "file:C:/Users/mitko/Stitch/Packages/FabricSharedPackage",
       "depth": 0,
       "source": "local",
       "dependencies": {
@@ -128,7 +128,7 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.services.core": {
-      "version": "1.4.2",
+      "version": "1.4.0",
       "depth": 1,
       "source": "registry",
       "dependencies": {

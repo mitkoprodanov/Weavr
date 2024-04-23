@@ -1,3 +1,4 @@
+
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,6 +8,7 @@ using System.Runtime.Serialization.Formatters.Binary;
 using UnityEngine;
 using UnityEditor;
 using Fabric.Shared;
+// using Fabric.SerializationHelper;
 
 public class TerrainGenerator : MonoBehaviour
 {
@@ -45,6 +47,13 @@ public class TerrainGenerator : MonoBehaviour
 
     public string worldDirectoryName = "world";
 
+    protected static SurrogateSelector serializationSurrogateSelector = new SurrogateSelector();
+    static TerrainGenerator()
+    {
+        serializationSurrogateSelector.AddSurrogate(typeof(Vector3), new StreamingContext(StreamingContextStates.All), new Vector3SerializationSurrogate());
+        serializationSurrogateSelector.AddSurrogate(typeof(Color), new StreamingContext(StreamingContextStates.All), new ColorSerializationSurrogate());
+
+    }
     // Start is called before the first frame update
     void Start()
     {
@@ -321,16 +330,9 @@ public class TerrainGenerator : MonoBehaviour
 
     public void Generate()
     {
-        Debug.Log("GenerateNoise");
         GenerateNoise();
-
-        Debug.Log("Colorize");
         Colorize();
-
-        Debug.Log("BuildTerrainData");
         BuildTerrainData();
-
-        Debug.Log("GenerateVegetation");
         GenerateVegetation();
     }
 
@@ -390,17 +392,101 @@ public class TerrainGenerator : MonoBehaviour
 
     private void SaveWorldToFile()
     {
-        string fileName = Application.persistentDataPath + "/" + worldDirectoryName + "/" + noiseSeed.ToString() + ".ftr";
-        Fabric.Shared.FileHelper.SaveToFile(terrainData, fileName);
-        Debug.Log("World saved to: " + fileName);
-    }
+        Debug.Log("Terrain vertices count: " + terrainData.Vertices.Count);
+        Debug.Log("Terrain triangles count " + terrainData.Triangles.Count);
+
+        FileStream file;
+        if (File.Exists(GetWorldFileName()))
+        {
+            file = File.OpenWrite(GetWorldFileName());
+            file.SetLength(0);
+        }
+        else
+        {
+            Directory.CreateDirectory(GetWorldDirectoryName());
+            file = File.Create(GetWorldFileName());
+        }
+
+        if (file == null)
+        {
+            Debug.LogError("TerrainGenerator::SaveWorldToFile error: Could not create or overwrite file.");
+            return;
+        }
+
+        MemoryStream memoryStream = new MemoryStream();
+
+        BinaryFormatter binaryFormatter = new BinaryFormatter();
+        binaryFormatter.SurrogateSelector = serializationSurrogateSelector;
+
+        binaryFormatter.Serialize(memoryStream, terrainData);
+
+        memoryStream.Position = 0;
+        memoryStream.CopyTo(file);
+
+        memoryStream.Close();
+        file.Close();
+    } 
 
     private void LoadWorldFromFile()
     {
-        string fileName = Application.persistentDataPath + "/" + worldDirectoryName + "/" + noiseSeed.ToString() + ".ftr";
-        terrainData = (Fabric.Shared.TerrainData)Fabric.Shared.FileHelper.LoadFromFile(fileName);
-        UpdateMesh();        
-        Debug.Log("World loaded from: " + fileName);
+        FileStream file;
+        if (File.Exists(GetWorldFileName()))
+        {
+            file = File.OpenRead(GetWorldFileName());
+        }
+        else
+        {
+            Debug.LogError("TerrainGenerator::LoadWorldFromFile error: Filename does not exist: " + GetWorldFileName());
+            return;
+        }
+
+        if (file == null)
+        {
+            Debug.LogError("TerrainGenerator::LoadWorldFromFile error: Could not open file: " + GetWorldFileName());
+            return;
+        }
+
+        try
+        {
+            MemoryStream memoryStream = new MemoryStream();
+            file.CopyTo(memoryStream);
+            memoryStream.Position = 0;
+
+            BinaryFormatter binaryFormatter = new BinaryFormatter();
+            binaryFormatter.SurrogateSelector = serializationSurrogateSelector;
+
+            Debug.Log("Load 0");
+
+            terrainData = (Fabric.Shared.TerrainData)binaryFormatter.Deserialize(memoryStream);
+
+            Debug.Log("Load 1");
+
+            UpdateMesh();
+
+            memoryStream.Close();
+        }
+        catch (SerializationException exception)
+        {
+            Debug.LogError("TerrainGenerator::LoadWorldFromFile error: Serialization error: " + exception.ToString());
+        }
+
+        file.Close();
+    } 
+
+    private bool WorldDirectoryExists()
+    {
+        return Directory.Exists(GetWorldDirectoryName());
+    }
+
+    private string GetWorldDirectoryName()
+    {
+        return Application.persistentDataPath + "/" + worldDirectoryName;
+    }
+
+
+    private string GetWorldFileName()
+    {
+        return GetWorldDirectoryName() + "/" + noiseSeed.ToString() + ".wff";
     }
 
     void OnDrawGizmos()

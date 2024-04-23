@@ -2,7 +2,7 @@
     "name": "Weavr",
     "rootNamespace": "",
     "references": [
-        "GUID:623281ed87d6f6740b05c89f32e64dd9"
+        "com.fabric.shared"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
