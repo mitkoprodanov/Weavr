@@ -5,4 +5,4 @@ See [Weavr's GitHub Wiki page](https://github.com/mitkoprodanov/Weavr/wiki
 
 ## Acknowledgments
 This project includes code from:
-- [Project Name](https://link-to-project), licensed under the MIT License.
+- [FastNoiseLite](https://github.com/Auburn/FastNoiseLite), licensed under the MIT License.
